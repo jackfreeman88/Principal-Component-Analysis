@@ -157,12 +157,14 @@ class PCA_COV:
         - If you normalized, remember to rescale the data projected back to the original data space.
         '''
 	   
-		self.pca_project(list(np.arange(top_k)))
+		pcs_to_keep = list(np.arange(top_k))
+		self.pca_project(pcs_to_keep)
 		
-		if (self.normalized):
-			A_r = (self.A_proj - self.A.min())/(self.A.max()-self.A.min())
-		else:
-			A_r = self.A_proj 
+		A_r = (self.A_proj @ self.e_vecs[:,pcs_to_keep].T)
+		#if (self.normalized):
+			#A_r = A_r * (self.A_max-self.A_min)  + self.A_min
 		
+		#print(A_r.shape)
+
 		return A_r
 
