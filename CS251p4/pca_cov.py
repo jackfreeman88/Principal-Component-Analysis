@@ -101,9 +101,15 @@ class PCA_COV:
 		self.vars = vars
 		self.A = self.data[self.vars]
 
-		if normalize == True:
-			self.A = (self.A - self.A.min())/(self.A.max()-self.A.min()) #normalize sep
 		self.A = self.A.to_numpy()
+		self.A_min = self.A.min()
+		self.A_max = self.A.max()
+
+		if normalize == True:
+			print("Normalize")			
+			self.A = (self.A - self.A_min)/(self.A_max-self.A_min) #normalize sep
+			print(self.A.shape)
+		
 		covmatrix = self.covariance_matrix(self.A)
 		self.e_vals, self.e_vecs = np.linalg.eig(covmatrix)
 		self.prop_var = self.compute_prop_var(self.e_vals)
@@ -136,35 +142,23 @@ class PCA_COV:
 	def pca_project(self, pcs_to_keep):
 		'''Project the data onto `pcs_to_keep` PCs (not necessarily contiguous)'''
 	  
-		Ynew = (self.A - np.mean(self.A, axis = 0))@ self.e_vecs
+		Ynew = self.A@ self.e_vecs
 		self.A_proj = Ynew[:,pcs_to_keep]
 		return self.A_proj
 		
 
 	def pca_then_project_back(self, top_k):
-		'''Project the data into PCA space (on `top_k` PCs) then project it back to the data space
-		        Parameters:
-        -----------
-        top_k: int. Project the data onto this many top PCs.
-
-        Returns:
-        -----------
-        ndarray. shape=(num_samps, num_selected_vars)
-
-        TODO:
-    
-        - Project this PCA-transformed data back to the original data space
-        - If you normalized, remember to rescale the data projected back to the original data space.
-        '''
-	   
+		'''Project the data into PCA space (on `top_k` PCs) then project it back to the data space'''
+		
 		pcs_to_keep = list(np.arange(top_k))
 		self.pca_project(pcs_to_keep)
 		
-		A_r = (self.A_proj @ self.e_vecs[:,pcs_to_keep].T)
-		#if (self.normalized):
-			#A_r = A_r * (self.A_max-self.A_min)  + self.A_min
+		A_r = (self.A_proj @ self.e_vecs[:,pcs_to_keep].T)		
+		if (self.normalized):			
+			A_r = A_r * (self.A_max-self.A_min) + self.A_min
 		
-		#print(A_r.shape)
+		
 
 		return A_r
 
+		
